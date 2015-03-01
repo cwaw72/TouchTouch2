@@ -25,6 +25,13 @@
             >
         </service>
 
+        <service android:name=".Nofi_Off"
+            >
+        </service>
+
+        <service android:name=".Nofi_On"
+            >
+        </service>
     </application>
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
 

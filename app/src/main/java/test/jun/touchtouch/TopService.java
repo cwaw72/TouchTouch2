@@ -1,16 +1,22 @@
 package test.jun.touchtouch;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +31,8 @@ public class TopService extends Service implements View.OnTouchListener{
     private int one=0;
     private int Two=0;
     private int Three=0;
+
+    private NotificationManager mNM;
 
     private String[] PK_N =  new String[]{"null","null","null","null","null","null"};
 
@@ -42,7 +50,7 @@ public class TopService extends Service implements View.OnTouchListener{
         mPopupView.setText("     ");                        //텍스트 설정
         mPopupView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 60); //텍스트 크기 18sp
         mPopupView.setTextColor(Color.BLUE);                                  //글자 색상
-        mPopupView.setBackgroundColor(Color.argb(127, 0, 255, 255)); //텍스트뷰 배경 색
+        mPopupView.setBackgroundColor(Color.argb(50, 30, 30, 30)); //텍스트뷰 배경 색
 
        mPopupView.setOnTouchListener(this);              //팝업뷰에 터치 리스너 등록
 
@@ -61,6 +69,10 @@ public class TopService extends Service implements View.OnTouchListener{
 
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);  //윈도우 매니저
         mWindowManager.addView(mPopupView, mParams);      //윈도우에 뷰 넣기. permission 필요.
+
+        Toast.makeText(this, "서비스 가동", Toast.LENGTH_LONG).show();
+
+
     }
 
     @Override
@@ -75,6 +87,7 @@ public class TopService extends Service implements View.OnTouchListener{
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
+        Toast.makeText(this, "서비스 가동2", Toast.LENGTH_LONG).show();
 
         PK_N = intent.getStringArrayExtra("info");
         return START_REDELIVER_INTENT;
@@ -97,7 +110,7 @@ public class TopService extends Service implements View.OnTouchListener{
         }
 
         if(event.getAction()!=2)
-            Log.v("Sevice, View onTouchEvent", "action: " + action + ", x:" + x + ", y:" + y);
+            Log.i("Sevice, View onTouchEvent", "action: " + action + ", x:" + x + ", y:" + y);
         if (event.getAction()==773)
             Three++;
         if (event.getAction()==517)
@@ -117,7 +130,10 @@ public class TopService extends Service implements View.OnTouchListener{
     public void enter_App(){
 
         String name;
-        if(Three > 3 || Two > 3 || one > 3) return;
+        if(Three > 3 || Two > 3 || one > 3) {
+                        Toast.makeText(this, "4번 이상 클릭 하셨습니다.", Toast.LENGTH_LONG).show();
+            return;
+        }
 
         if( Three > 1){
             name = PK_N[Three+2];
@@ -130,8 +146,17 @@ public class TopService extends Service implements View.OnTouchListener{
         }
         else{
             Intent main = new Intent(this, MainActivity.class);
-            Toast.makeText(this, "한번만 클릭 하셨습니다.", Toast.LENGTH_LONG).show();
-            startActivity(getPackageManager().getLaunchIntentForPackage("test.jun.touchtouch"));
+
+            int a = WindowManager.LayoutParams.MATCH_PARENT;
+
+            View pv = mPopupView.getRootView();
+            Log.i("inininin", a + "   a");
+            Log.i("inininin", pv.getRight() + "   b");
+            Log.i("inininin", pv.getTop() + "   c");
+            Log.i("inininin", pv.getBottom() + "   d");
+
+//            Toast.makeText(this, "한번만 클릭 하셨습니다.", Toast.LENGTH_LONG).show();
+//            startActivity(getPackageManager().getLaunchIntentForPackage("test.jun.touchtouch"));
 
             return;
         }
@@ -143,6 +168,8 @@ public class TopService extends Service implements View.OnTouchListener{
         Intent intent = getPackageManager().getLaunchIntentForPackage(name);
         startActivity(intent);
     }
+
+
 
 
 }

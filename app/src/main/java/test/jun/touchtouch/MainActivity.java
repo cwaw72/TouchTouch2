@@ -1,12 +1,16 @@
 package test.jun.touchtouch;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -19,13 +23,17 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends Activity implements View.OnTouchListener {
 
     static List<PackageInfo> packs;
     private String[] info_PI;
-    private String[] info_PN;
+    private int[] position = {0,0,0,0};
+
+    private HashMap<String, String> Pk_Info = new HashMap<>();
+
     private int select_index;
 
     // 버튼 옆의 화면 (실행 시킬 앱 정)
@@ -39,6 +47,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     //셋팅 파일 위치
     String dirPath;
 
+
     private String[] PK_N = new String[]{"com.kakao.talk", "kr.co.vcnc.android.couple", "vStudio.Android.Camera360", "null", "null", "null"};
     private TextView[] text_List;
 
@@ -46,19 +55,23 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-
-        setContentView(R.layout.sub_main);
-        //다시 실행 할때(1번 클릭했을때) 탑 서비스 지우기.
         stopService(new Intent(this, TopService.class));
 
-        //------------------------------------------------------------------------------------------
-        //설정 저장 장소
-        dirPath = getFilesDir().getAbsolutePath();
-        // 어플 리스트 정보 받아오기.
-        set_P();
+        setContentView(R.layout.sub_main);
+
+
+        //다시 실행 할때(1번 클릭했을때) 탑 서비스 지우기.
+
         //------------------------------------------------------------------------------------------
 
-        Toast.makeText(this, "받기 성공", Toast.LENGTH_LONG).show();
+        //설정 저장 장소
+        dirPath = getFilesDir().getAbsolutePath();
+
+        // 어플 리스트 정보 받아오기.
+        set_P();
+
+        //------------------------------------------------------------------------------------------
+
 
         setContentView(R.layout.activity_main);
 
@@ -70,6 +83,8 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         text_3_2 = (TextView) findViewById(R.id.text_3_2);
 
         text_List = new TextView[]{text_1_2, text_1_3, text_2_2, text_2_3, text_3_2, text_3_3};
+
+//        position =
 
         //데이터 읽어오
         read_Option();
@@ -94,10 +109,17 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     }
 
     public void onClick_Start(View view) {
+
+        //데이터 쓰기
         write_Option();
+
+        Set_Noti_On();
+
         Intent intent = new Intent(this, TopService.class);
         intent.putExtra("info", PK_N);
+        intent.putExtra("position", PK_N);
         startService(intent);
+
         finish();
     }
 
@@ -107,45 +129,41 @@ public class MainActivity extends Activity implements View.OnTouchListener {
 
     protected void makeDialog(final int i) {
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+       final PackageListDialog dl = new PackageListDialog(this, info_PI);
 
-        builder.setTitle("바로 실행시킬 어플을 선택하세요.")        // 제목 설정
+        dl.show();
 
-                .setItems(info_PI, new DialogInterface.OnClickListener() {    // 목록 클릭시 설정
+        dl.setOnDismissListener(new DialogInterface.OnDismissListener() {
 
-                    public void onClick(DialogInterface dialog, int index) {
-                        if (0 <= i || i <= 5) {
-                            select_index = index;
-                            PK_N[i] = info_PN[select_index];
-                            text_List[i].setText(info_PI[select_index]);
-                        } else
-                            Toast.makeText(MainActivity.this, "index error", Toast.LENGTH_SHORT).show();
+            @Override
+           public void onDismiss(DialogInterface dialog) {
 
-                    }
-
-                });
+               if (0 <= i || i <= 5) {
+                   PK_N[i] = Pk_Info.get(dl.getPosition());
+                   text_List[i].setText(dl.getPosition());
+               }
+           }
+       });
 
 
-        AlertDialog dialog = builder.create();    // 알림창 객체 생성
-        dialog.show();    // 알림창 띄우기
     }
 
     private void set_P() {
-        //설치되어 있는 어플 정보 받아오기
+        //  설치되어 있는 어플 정보 받아오기
         packs = getPackageManager().getInstalledPackages(PackageManager.GET_SERVICES);
 
-        //배열 사이즈 = 어플정보 사이즈
+        //  배열 사이즈 = 어플정보 사이즈
         info_PI = new String[packs.size()];
-        info_PN = new String[packs.size()];
 
-        // 여기서 부터는 알림창의 속성 설정
+        //  여기서 부터는 알림창의 속성 설정
         PackageManager pm = this.getPackageManager();
 
-//        어플리케이션 정보 String 배열 넣기
+        //어플리케이션 정보 String 배열 넣기
         for (int i = 0; i < packs.size(); i++) {
             Log.i(packs.get(i).applicationInfo.loadLabel(pm).toString(), packs.get(i).packageName);
-            info_PI[i] = packs.get(i).applicationInfo.loadLabel(pm).toString();
-            info_PN[i] = packs.get(i).packageName;
+
+            info_PI[i] = packs.get(i).applicationInfo.loadLabel(pm).toString();                             //패키지 리스트 정보
+            Pk_Info.put(packs.get(i).applicationInfo.loadLabel(pm).toString(),packs.get(i).packageName);    //맵
         }
 
     }
@@ -197,7 +215,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                 }
             }
     }
-
+    //데이터 쓰기
     private void write_Option(){
 
         // txt 파일 생성
@@ -230,8 +248,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
             Log.e(" 파일에러1 ","파일을 생성하지 못하였습니다.");
         }
     }
-
-
+    //버튼 클릭
     public void onClick_1_2(View view) {
         makeDialog(0);
     }
@@ -251,13 +268,37 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         makeDialog(5);
     }
 
+    //초기화버튼
     public void onClock_Clear(View view) {
+
         for(int i = 0 ; i < PK_N.length; i++) {
-           PK_N[i] = "null";
+            PK_N[i] = "null";
         }
         for(int i = 0 ; i < text_List.length ; i++) {
             text_List[i].setText(" 설정이 되어 있지 않습니다. ");
         }
+    }
+
+    private void Set_Noti_On(){
+        //알림 객체 이것을 통해 서비스를 on off 할수있다.
+        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+       // PendingIntent pending_Intent = PendingIntent.getService(this, 0 , new Intent(this, On_Noti_Activity.class), PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pending_Intent = PendingIntent.getService(this, 0, new Intent(this, Nofi_Off.class), PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Notification.Builder mBuilder = new Notification.Builder(this);
+        mBuilder.setSmallIcon(R.drawable.ic_launcher);
+        mBuilder.setTicker("Notification.Builder");
+        mBuilder.setWhen(System.currentTimeMillis());
+        mBuilder.setNumber(10);
+        mBuilder.setContentTitle("Notification.Builder Title");
+        mBuilder.setContentText("Notification.Builder Massage");
+        mBuilder.setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE);
+        mBuilder.setContentIntent(pending_Intent);
+        mBuilder.setAutoCancel(false);
+
+        mBuilder.setPriority(NotificationCompat.PRIORITY_MAX);
+
+        nm.notify(111, mBuilder.build());
     }
 }
 
