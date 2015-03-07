@@ -20,6 +20,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+
 /**
  * Created by user on 15. 2. 15.
  */
@@ -32,10 +37,10 @@ public class TopService extends Service implements View.OnTouchListener{
     private int Two=0;
     private int Three=0;
 
-    private NotificationManager mNM;
+    private String dirPath;
 
-    private String[] PK_N =  new String[]{"null","null","null","null","null","null"};
-
+    private String[] PK_N = new String[]{"null", "null", "null", "null", "null", "null", "null", "null", "null"};
+    private int[] color = new int[]{0,0,0};
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -50,9 +55,11 @@ public class TopService extends Service implements View.OnTouchListener{
         mPopupView.setText("     ");                        //텍스트 설정
         mPopupView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 60); //텍스트 크기 18sp
         mPopupView.setTextColor(Color.BLUE);                                  //글자 색상
-        mPopupView.setBackgroundColor(Color.argb(50, 30, 30, 30)); //텍스트뷰 배경 색
+        mPopupView.setBackgroundColor(Color.argb(50, 0, 230, 230)); //텍스트뷰 배경 색
 
-       mPopupView.setOnTouchListener(this);              //팝업뷰에 터치 리스너 등록
+//        mPopupView.setBackgroundColor(Color.argb(50, 30, 30, 30)); //텍스트뷰 배경 색
+
+        mPopupView.setOnTouchListener(this);              //팝업뷰에 터치 리스너 등록
 
 
         //최상위 윈도우에 넣기 위한 설정 TYPE_SYSTEM_ALERT
@@ -72,7 +79,6 @@ public class TopService extends Service implements View.OnTouchListener{
 
         Toast.makeText(this, "서비스 가동", Toast.LENGTH_LONG).show();
 
-
     }
 
     @Override
@@ -87,9 +93,10 @@ public class TopService extends Service implements View.OnTouchListener{
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
-        Toast.makeText(this, "서비스 가동2", Toast.LENGTH_LONG).show();
 
-        PK_N = intent.getStringArrayExtra("info");
+        dirPath = getFilesDir().getAbsolutePath();
+        read_Option();
+
         return START_REDELIVER_INTENT;
     }
 
@@ -135,26 +142,17 @@ public class TopService extends Service implements View.OnTouchListener{
             return;
         }
 
-        if( Three > 1){
-            name = PK_N[Three+2];
+        //one 0,1,2 two 3,4,5 three 6,7,8
+        if( Three >= 1){
+            name = PK_N[Three+5];
         }
-        else if(Two > 1){
-            name = PK_N[Two];
+        else if(Two >= 1){
+            name = PK_N[Two+2];
         }
-        else if(one > 1){
-            name = PK_N[one-2];
+        else if(one >= 1){
+            name = PK_N[one-1];
         }
         else{
-            Intent main = new Intent(this, MainActivity.class);
-
-            int a = WindowManager.LayoutParams.MATCH_PARENT;
-
-            View pv = mPopupView.getRootView();
-            Log.i("inininin", a + "   a");
-            Log.i("inininin", pv.getRight() + "   b");
-            Log.i("inininin", pv.getTop() + "   c");
-            Log.i("inininin", pv.getBottom() + "   d");
-
 //            Toast.makeText(this, "한번만 클릭 하셨습니다.", Toast.LENGTH_LONG).show();
 //            startActivity(getPackageManager().getLaunchIntentForPackage("test.jun.touchtouch"));
 
@@ -167,6 +165,48 @@ public class TopService extends Service implements View.OnTouchListener{
         }
         Intent intent = getPackageManager().getLaunchIntentForPackage(name);
         startActivity(intent);
+    }
+
+    //데이터 읽어오기
+    private void read_Option() {
+
+        // 일치하는 폴더가 없으면 생성
+
+        File file = new File(dirPath);
+
+        if (!file.exists()) {
+            file.mkdirs();
+            Toast.makeText(this, "Success", Toast.LENGTH_SHORT).show();
+        }
+
+        // 파일이 1개 이상이면 파일 이름 출력
+        if (file.listFiles().length > 0)
+            for (File f : file.listFiles()) {
+                String str = f.getName();
+                Log.e(null, "fileName : " + str);
+
+                // 파일 내용 읽어오기
+                String loadPath = dirPath + "/" + str;
+                try {
+                    FileInputStream fis = new FileInputStream(loadPath);
+                    BufferedReader bufferReader = new BufferedReader(new InputStreamReader(fis));
+
+                    String content = "", temp = "";
+                    if(str.equals("PK_N.txt")){
+                        for(int i = 0 ; i < PK_N.length; i++) {
+                            temp = bufferReader.readLine();
+                            PK_N[i] = temp;
+                        }
+                    }
+
+                    Log.e(null, "" + content);
+
+                    fis.close();
+                    bufferReader.close();
+
+                } catch (Exception e) {
+                }
+            }
     }
 
 

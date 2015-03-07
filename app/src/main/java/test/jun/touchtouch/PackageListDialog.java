@@ -13,7 +13,10 @@ import android.widget.ListView;
 
 /**
  * Created by user on 15. 2. 27.
+ *
  */
+
+//설정 할때 패키지를 쉽게 찾을수 있도록 검색기능을 넣은 다이어 로그
 public class PackageListDialog extends Dialog implements View.OnClickListener {
 
     private ListView list;
@@ -41,11 +44,9 @@ public class PackageListDialog extends Dialog implements View.OnClickListener {
 
                 index = (String) list.getItemAtPosition(position);
                 dismiss();
-
             }
 
         });
-
     }
 
     @Override

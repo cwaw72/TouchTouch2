@@ -1,6 +1,7 @@
 package test.jun.touchtouch;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -12,8 +13,12 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,10 +42,15 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     private int select_index;
 
     // 버튼 옆의 화면 (실행 시킬 앱 정)
+    private TextView text_1_1;
     private TextView text_1_2;
     private TextView text_1_3;
+
+    private TextView text_2_1;
     private TextView text_2_2;
     private TextView text_2_3;
+
+    private TextView text_3_1;
     private TextView text_3_2;
     private TextView text_3_3;
 
@@ -48,20 +58,21 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     String dirPath;
 
 
-    private String[] PK_N = new String[]{"com.kakao.talk", "kr.co.vcnc.android.couple", "vStudio.Android.Camera360", "null", "null", "null"};
+    private String[] PK_N = new String[]{"null", "null", "null", "null", "null", "null", "null", "null", "null"};
     private TextView[] text_List;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
-        stopService(new Intent(this, TopService.class));
+
+       // stopService(new Intent(this, TopService.class));
 
         setContentView(R.layout.sub_main);
 
 
         //다시 실행 할때(1번 클릭했을때) 탑 서비스 지우기.
-
+        startService(new Intent(this, Nofi_Off.class));
         //------------------------------------------------------------------------------------------
 
         //설정 저장 장소
@@ -72,23 +83,73 @@ public class MainActivity extends Activity implements View.OnTouchListener {
 
         //------------------------------------------------------------------------------------------
 
+//        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+//                | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+//                | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+//                | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+
+
 
         setContentView(R.layout.activity_main);
 
+        text_1_1 = (TextView) findViewById(R.id.text_1_1);
         text_1_2 = (TextView) findViewById(R.id.text_1_2);
         text_1_3 = (TextView) findViewById(R.id.text_1_3);
+
+        text_2_1 = (TextView) findViewById(R.id.text_2_1);
         text_2_2 = (TextView) findViewById(R.id.text_2_2);
         text_2_3 = (TextView) findViewById(R.id.text_2_3);
-        text_3_3 = (TextView) findViewById(R.id.text_3_3);
+
+        text_3_1 = (TextView) findViewById(R.id.text_3_1);
         text_3_2 = (TextView) findViewById(R.id.text_3_2);
+        text_3_3 = (TextView) findViewById(R.id.text_3_3);
 
-        text_List = new TextView[]{text_1_2, text_1_3, text_2_2, text_2_3, text_3_2, text_3_3};
 
-//        position =
+        text_List = new TextView[]{text_1_1, text_1_2, text_1_3, text_2_1, text_2_2, text_2_3, text_3_1, text_3_2, text_3_3};
 
-        //데이터 읽어오
+        //데이터 읽어오기
         read_Option();
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        //아이콘
+        menu.add(0, 1 , Menu.NONE, "ONE").setTitle("색상 변경");
+
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch (item.getItemId()){
+            case 1:
+                Toast.makeText(this, "메뉴클릭", Toast.LENGTH_SHORT).show();
+                final String[] cars = { "SM3", "SM5", "SM7", "SONATA", "AVANTE", "붕붕" };
+                AlertDialog.Builder radioDialog = new AlertDialog.Builder(this);
+
+                radioDialog
+                        .setTitle("자동차")
+                        .setSingleChoiceItems(cars, -1, new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // TODO Auto-generated method stub
+
+                                //text.setText(cars[which]);
+                            }
+                        })
+                        .setPositiveButton("확인", null)
+                        .setNegativeButton("취소", null)
+                        .show();
+
+                break;
+
+        }
+        return true;
     }
 
     public boolean onTouch(View view, MotionEvent event) {
@@ -113,18 +174,22 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         //데이터 쓰기
         write_Option();
 
-        Set_Noti_On();
+        //탑 서비스에 자료 보내기
+//        Intent intent = new Intent(this, TopService.class);
+//        intent.putExtra("info", PK_N);
+//        intent.putExtra("position", PK_N);
 
-        Intent intent = new Intent(this, TopService.class);
-        intent.putExtra("info", PK_N);
-        intent.putExtra("position", PK_N);
-        startService(intent);
+        //탑서비스 시작
+       // startService(new Intent(this, TopService.class));
+
+        //알림창 생성
+        startService(new Intent(this, Nofi_On.class));
 
         finish();
     }
 
     public void onClick_end(View view) {
-        stopService(new Intent(this, TopService.class));
+        startService(new Intent(this, Nofi_Off.class));
     }
 
     protected void makeDialog(final int i) {
@@ -138,10 +203,12 @@ public class MainActivity extends Activity implements View.OnTouchListener {
             @Override
            public void onDismiss(DialogInterface dialog) {
 
-               if (0 <= i || i <= 5) {
+               if (0 <= i && i <= 8) {
                    PK_N[i] = Pk_Info.get(dl.getPosition());
                    text_List[i].setText(dl.getPosition());
                }
+               else
+                   Log.e("index error" , " i 값이잘못되었습니다.");
            }
        });
 
@@ -199,7 +266,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                                     PK_N[i] = temp;
                                 }
                             }
-                            else if (str.equals("PK_SN.txt")){
+                            if (str.equals("PK_SN.txt")){
                                 for(int i = 0 ; i < text_List.length ; i++) {
                                     temp = bufferReader.readLine();
                                     text_List[i].setText(temp);
@@ -249,23 +316,34 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         }
     }
     //버튼 클릭
-    public void onClick_1_2(View view) {
+    public void onClick_1_1(View view) {
         makeDialog(0);
     }
-    public void onClick_1_3(View view) {
+    public void onClick_1_2(View view) {
         makeDialog(1);
     }
-    public void onClick_2_2(View view) {
+    public void onClick_1_3(View view) {
         makeDialog(2);
     }
-    public void onClick_2_3(View view) {
+
+    public void onClick_2_1(View view) {
         makeDialog(3);
     }
-    public void onClick_3_2(View view) {
+    public void onClick_2_2(View view) {
         makeDialog(4);
     }
-    public void onClick_3_3(View view) {
+    public void onClick_2_3(View view) {
         makeDialog(5);
+    }
+
+    public void onClick_3_1(View view) {
+        makeDialog(6);
+    }
+    public void onClick_3_2(View view) {
+        makeDialog(7);
+    }
+    public void onClick_3_3(View view) {
+        makeDialog(8);
     }
 
     //초기화버튼
@@ -279,26 +357,9 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         }
     }
 
-    private void Set_Noti_On(){
-        //알림 객체 이것을 통해 서비스를 on off 할수있다.
-        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-       // PendingIntent pending_Intent = PendingIntent.getService(this, 0 , new Intent(this, On_Noti_Activity.class), PendingIntent.FLAG_UPDATE_CURRENT);
-        PendingIntent pending_Intent = PendingIntent.getService(this, 0, new Intent(this, Nofi_Off.class), PendingIntent.FLAG_UPDATE_CURRENT);
 
-        Notification.Builder mBuilder = new Notification.Builder(this);
-        mBuilder.setSmallIcon(R.drawable.ic_launcher);
-        mBuilder.setTicker("Notification.Builder");
-        mBuilder.setWhen(System.currentTimeMillis());
-        mBuilder.setNumber(10);
-        mBuilder.setContentTitle("Notification.Builder Title");
-        mBuilder.setContentText("Notification.Builder Massage");
-        mBuilder.setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE);
-        mBuilder.setContentIntent(pending_Intent);
-        mBuilder.setAutoCancel(false);
-
-        mBuilder.setPriority(NotificationCompat.PRIORITY_MAX);
-
-        nm.notify(111, mBuilder.build());
+    public void onClock_Option(View view) {
+        openOptionsMenu();
     }
 }
 

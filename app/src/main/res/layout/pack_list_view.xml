@@ -5,19 +5,22 @@
     android:layout_height="fill_parent"
     android:layout_width="200dip"
     android:orientation="vertical"
-    android:gravity="center">
+    android:gravity="center"
+    >
 
     <EditText android:id="@+id/EditBox"
         android:maxLines="1"
         android:layout_height="wrap_content"
         android:layout_width="180dip"
-        android:gravity="left">
+        android:gravity="left"
+        >
     </EditText>
 
     <ListView android:id="@+id/List"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:choiceMode="singleChoice">
+        android:choiceMode="singleChoice"
+     >
     </ListView>
 
 </LinearLayout>
