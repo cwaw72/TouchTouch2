@@ -2,6 +2,7 @@ package test.jun.touchtouch;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -57,7 +58,8 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     //셋팅 파일 위치
     String dirPath;
 
-
+    String currentColor = "검정" ;
+    String moveBoolean = "고정" ;
     private String[] PK_N = new String[]{"null", "null", "null", "null", "null", "null", "null", "null", "null"};
     private TextView[] text_List;
 
@@ -110,15 +112,17 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         //데이터 읽어오기
         read_Option();
 
+
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
         getMenuInflater().inflate(R.menu.menu_main, menu);
 
-        //아이콘
-        menu.add(0, 1 , Menu.NONE, "ONE").setTitle("색상 변경");
 
+        //아이콘
+        menu.add(1, 1 , Menu.NONE, "ONE").setTitle("색상 변경");
+        menu.add(2, 2 , Menu.NONE, "TWO").setTitle("뷰 고정/움직이기");
 
         return true;
     }
@@ -127,27 +131,36 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     public boolean onOptionsItemSelected(MenuItem item){
         switch (item.getItemId()){
             case 1:
-                Toast.makeText(this, "메뉴클릭", Toast.LENGTH_SHORT).show();
-                final String[] cars = { "SM3", "SM5", "SM7", "SONATA", "AVANTE", "붕붕" };
+                final String[] color = { "빨강", "노랑", "민트", "흰색", "검정" };
                 AlertDialog.Builder radioDialog = new AlertDialog.Builder(this);
-
                 radioDialog
-                        .setTitle("자동차")
-                        .setSingleChoiceItems(cars, -1, new DialogInterface.OnClickListener() {
+                        .setTitle("현재 색상 : " + currentColor)
+                        .setSingleChoiceItems(color, -1, new DialogInterface.OnClickListener() {
 
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 // TODO Auto-generated method stub
-
-                                //text.setText(cars[which]);
+                                currentColor = (color[which]);
                             }
                         })
                         .setPositiveButton("확인", null)
-                        .setNegativeButton("취소", null)
                         .show();
-
                 break;
+            case 2:
+                final String[] viewPosition = { "고정" , "이동" };
+                AlertDialog.Builder viewRadioDialog = new AlertDialog.Builder(this);
+                viewRadioDialog.setTitle("현재 설정 :"  + moveBoolean)
+                        .setSingleChoiceItems(viewPosition, -1, new DialogInterface.OnClickListener() {
 
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // TODO Auto-generated method stub
+                                moveBoolean = (viewPosition[which]);
+                            }
+                        })
+                        .setPositiveButton("확인", null)
+                        .show();
+                break;
         }
         return true;
     }
@@ -272,6 +285,12 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                                     text_List[i].setText(temp);
                                 }
                             }
+                            if (str.equals("colorName.txt")){
+                                currentColor = bufferReader.readLine();
+                            }
+                            if (str.equals("moveBoolean.txt")){
+                                moveBoolean = bufferReader.readLine();
+                            }
 
                         Log.e(null, "" + content);
 
@@ -300,15 +319,24 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         //보여지는 파일 이름
         File savefile2 = new File(dirPath+"/PK_SN.txt");
 
+        File colorFile = new File(dirPath+"/colorName.txt");
+        File moveFile = new File(dirPath+"/moveBoolean.txt");
+
         try{
             FileOutputStream fos = new FileOutputStream(savefile);
             FileOutputStream fos2 = new FileOutputStream(savefile2);
+            FileOutputStream fos3 = new FileOutputStream(colorFile);
+            FileOutputStream fos4 = new FileOutputStream(moveFile);
 
             fos.write(pk_Name.getBytes());
             fos2.write(pk_Show_Name.getBytes());
+            fos3.write(currentColor.getBytes());
+            fos4.write(moveBoolean.getBytes());
 
             fos.close();
             fos2.close();
+            fos3.close();
+            fos4.close();
 
             Toast.makeText(this, "Save Success", Toast.LENGTH_SHORT).show();
         } catch(IOException e){
